@@ -20,9 +20,6 @@ def MakeQR(inputfile, outputfile):
 		qr.add_data(qrData)
 		qr.make(fit=True)
 
-		array=[]
-
-		#with open(outputfile, 'w') as out:
 		modcount = qr.modules_count
 
 		def get_module(x, y):
