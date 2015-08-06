@@ -15,10 +15,12 @@ def MakeQR(inputfile, outputfile):
 		qrData = qrcode.util.QRData(data, qrcode.util.MODE_8BIT_BYTE, False)
 
 		qr = qrcode.QRCode(
+			border=4,
+			version=8,
 			error_correction=qrcode.constants.ERROR_CORRECT_H
 		)
 		qr.add_data(qrData)
-		qr.make(fit=True)
+		qr.make()#fit=True)
 
 		modcount = qr.modules_count
 

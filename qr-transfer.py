@@ -1,20 +1,12 @@
 import os
 import wx
 import png
-import zlib
+import bk1
 
 from subprocess import call
 
-def deflate(data, compresslevel=9):
-    compress = zlib.compressobj(
-            compresslevel,
-            zlib.DEFLATED
-    )
-    deflated = compress.compress(str(data))
-    deflated += compress.flush()
-    return bytearray(deflated)
-
 CACHE_DIR = "cache"
+QR_INTERVAL = 250
 
 class QRTransfer(wx.App):
     def __init__(self, redirect=False, filename=None):
@@ -30,6 +22,9 @@ class QRTransfer(wx.App):
 
         self.createWidgets()
         self.frame.Show()
+
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
 
     def createWidgets(self):
         self.emptyImg = wx.EmptyImage(50,50)
@@ -62,32 +57,38 @@ class QRTransfer(wx.App):
 
         dialog.Destroy()
 
-    def encode(self, data):
-        dataSize = len(data)
-        header = [ (dataSize>>24)&0xFF, (dataSize>>16)&0xFF, (dataSize>>8)&0xFF,
-                    dataSize&0xFF]
-        headerData = bytearray(header)
-        return bytearray(headerData+deflate(data))
+    def getQRPath(self, id):
+        return CACHE_DIR+"/qr"+str(id)+".png"
 
     def makeQR(self, filename):
-        with open(filename, 'rb') as file:
-            fileData = bytearray(file.read())
+        self.timer.Stop()
 
-            data = bytearray(self.encode(fileData))
+        with open(filename, 'rb') as ifile:
+            fileData = bytearray(ifile.read())
 
             if not os.path.exists(CACHE_DIR):
                 os.makedirs(CACHE_DIR)
 
+            dataArray = bk1.encode(fileData)
+
             filenameTemp = CACHE_DIR + "/temp_file"
-            with open(filenameTemp, 'wb') as file:
-                file.write(data)
 
-            filenameQrImage = CACHE_DIR + "/" + "qr1.png"
+            for i in range(0,len(dataArray)):
+                with open(filenameTemp, 'wb') as ofile:
+                    ofile.write(dataArray[i])
 
-            call(["python3", "qr-encode.py", "-i", filenameTemp, "-o", filenameQrImage])
+                    ofile.close()
+                    call(["python3", "qr-encode.py", "-i", filenameTemp, "-o", self.getQRPath(i+1)])
 
-            qrImage = wx.Image(filenameQrImage, wx.BITMAP_TYPE_ANY)
+            self.qrCount = len(dataArray)
+            self.qrIndex = 1
+
+            qrImage = wx.Image(self.getQRPath(self.qrIndex), wx.BITMAP_TYPE_ANY)
             self.setImage(qrImage)
+
+            self.timer.Start(QR_INTERVAL)
+
+            ifile.close()
 
     def setImage(self, img):
         self.image = img
@@ -115,6 +116,14 @@ class QRTransfer(wx.App):
             self.doResize(width, height)
 
             self.previousSize = size
+
+    def onTimer(self, event):
+        self.qrIndex += 1
+        if self.qrIndex > self.qrCount:
+            self.qrIndex = 1
+
+        qrImage = wx.Image(self.getQRPath(self.qrIndex), wx.BITMAP_TYPE_ANY)
+        self.setImage(qrImage)
 
     def doResize(self, width, height):
         if width < height-self.BOTTOM_HEIGHT:
