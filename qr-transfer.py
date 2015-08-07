@@ -1,12 +1,14 @@
 import os
 import wx
 import png
-import bk1
 
 from subprocess import call
 
+import bk1
+import anim
+
 CACHE_DIR = "cache"
-QR_INTERVAL = 250
+QR_INTERVAL = 300
 
 class QRTransfer(wx.App):
     def __init__(self, redirect=False, filename=None):
@@ -80,10 +82,11 @@ class QRTransfer(wx.App):
                     ofile.close()
                     call(["python3", "qr-encode.py", "-i", filenameTemp, "-o", self.getQRPath(i+1)])
 
-            self.qrCount = len(dataArray)
-            self.qrIndex = 1
+            self.state = anim.Anim(1,4)
+            self.tortoise = anim.Anim(1,len(dataArray))
+            self.rabbit = anim.Anim(1,len(dataArray))
 
-            qrImage = wx.Image(self.getQRPath(self.qrIndex), wx.BITMAP_TYPE_ANY)
+            qrImage = wx.Image(self.getQRPath(1), wx.BITMAP_TYPE_ANY)
             self.setImage(qrImage)
 
             self.timer.Start(QR_INTERVAL)
@@ -118,11 +121,22 @@ class QRTransfer(wx.App):
             self.previousSize = size
 
     def onTimer(self, event):
-        self.qrIndex += 1
-        if self.qrIndex > self.qrCount:
-            self.qrIndex = 1
+        self.state.Next()
 
-        qrImage = wx.Image(self.getQRPath(self.qrIndex), wx.BITMAP_TYPE_ANY)
+        img = 1
+        if self.state.Get() == 1:
+            img = self.rabbit.Get()
+            self.rabbit.Next()
+        if self.state.Get() == 2:
+            img = self.rabbit.Get()
+            self.rabbit.Next()
+        if self.state.Get() == 3:
+            img = self.tortoise.Get()
+        if self.state.Get() == 4:
+            img = self.tortoise.Get()
+            self.tortoise.Next()
+
+        qrImage = wx.Image(self.getQRPath(img), wx.BITMAP_TYPE_ANY)
         self.setImage(qrImage)
 
     def doResize(self, width, height):

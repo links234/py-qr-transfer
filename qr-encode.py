@@ -17,7 +17,7 @@ def MakeQR(inputfile, outputfile):
 		qr = qrcode.QRCode(
 			border=4,
 			version=8,
-			error_correction=qrcode.constants.ERROR_CORRECT_H
+			error_correction=qrcode.constants.ERROR_CORRECT_L
 		)
 		qr.add_data(qrData)
 		qr.make()#fit=True)

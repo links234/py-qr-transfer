@@ -15,7 +15,7 @@ def deflate(data, compresslevel=9):
     deflated += compress.flush()
     return bytearray(deflated)
 
-DEFAULT_CHUNK_SIZE = 128
+DEFAULT_CHUNK_SIZE = 512
 
 def encode(data, mode="AUTO", messageId=0):
     if mode=="NONE":
