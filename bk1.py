@@ -6,6 +6,8 @@ MAGIC_SECONDBYTE = 173
 ENCODE_NONE = 0
 ENCODE_DEFLATE = 1
 
+VERSION = 0
+
 def deflate(data, compresslevel=9):
     compress = zlib.compressobj(
             compresslevel,
@@ -39,7 +41,11 @@ def encode(data, mode="AUTO", messageId=0):
     return dataArray
 
 def encode_header(messageId, packetCount, packetId, encodeMode):
-	return bytearray([MAGIC_FIRSTBYTE, MAGIC_SECONDBYTE, messageId, packetCount, packetId, encodeMode])
+	rawHeader = bytearray([VERSION, messageId, packetCount, packetId, encodeMode])
+	
+	checkSum = rawHeader[0] ^ rawHeader[1] ^ rawHeader[2] ^ rawHeader[3] ^ rawHeader[4]
+	
+	return bytearray([MAGIC_FIRSTBYTE, MAGIC_SECONDBYTE, VERSION, messageId, packetCount, packetId, encodeMode, checkSum])
 
 def encode_DEFLATE(data, messageId=0, packetCount=1, packetId=1):
 	dataSize = len(data)
