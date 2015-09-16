@@ -30,5 +30,5 @@ Performance metrics on Note 3:
 
 [Apache License 2.0][2]
 
-[1]: https://gitlab.com/links234/BugKoops
+[1]: https://github.com/links234/BugKoops
 [2]: http://www.apache.org/licenses/LICENSE-2.0
